@@ -15,8 +15,7 @@ namespace TcpSubLib.Tests
         {
             using var connector = new TcpConnector(out ushort port);
             connector.ClientConnected += Continue;
-            using var connectingClient = new TcpClient();
-            connectingClient.Connect(IPAddress.Any, port);
+            using var connectingClient = new TcpReader(IPAddress.Any, port);
 
             bool success = false;
 
@@ -39,25 +38,24 @@ namespace TcpSubLib.Tests
         [TestMethod]
         public void CanReadWriteData()
         {
-            TcpClient connectingClient = null;
+            TcpReader connectingClient = null;
             using var connector = new TcpConnector(out ushort port);
             connector.ClientConnected += Continue;
-            connectingClient = new TcpClient();
-            connectingClient.Connect(IPAddress.Any, port);
+            connectingClient = new TcpReader(IPAddress.Any, port);
 
             bool finished = false;
             int? receivedAtClient = default;
-            int receivedAtListener = default;
+            // int receivedAtListener = default;
 
             void Continue(object sender, NetworkStream e)
             {
                 //Write to client / Read from client
                 e.WriteByte(123);
-                receivedAtClient = connectingClient?.GetStream().ReadByte();
+                receivedAtClient = connectingClient.Read(1)[0];
 
                 //Write to listener / Read from listener
-                connectingClient?.GetStream().WriteByte(213);
-                receivedAtListener = e.ReadByte();
+                // connectingClient?.GetStream().WriteByte(213);
+                // receivedAtListener = e.ReadByte();
 
                 finished = true;
             }
@@ -68,7 +66,7 @@ namespace TcpSubLib.Tests
             }
 
             Assert.AreEqual(123, receivedAtClient);
-            Assert.AreEqual(213, receivedAtListener);
+            // Assert.AreEqual(213, receivedAtListener);
 
             connectingClient?.Dispose();
         }
@@ -76,10 +74,8 @@ namespace TcpSubLib.Tests
         [TestMethod]
         public void CanReadAppPattern()
         {
-            TcpClient connectingClient = null;
             using var connector = new TcpConnector(out ushort port);
-            connectingClient = new TcpClient();
-            connectingClient.Connect(IPAddress.Any, port);
+            using var connectingClient = new TcpReader(IPAddress.Any, port);
 
             while (connector.ConnectedClientsCount <= 0)
             {
@@ -91,18 +87,7 @@ namespace TcpSubLib.Tests
             connector.Write(BitConverter.GetBytes((ushort)sendingString.Length));
             connector.Write(Encoding.UTF8.GetBytes(sendingString));
 
-            using var stream = connectingClient.GetStream();
-
-            byte[] stringLength = new byte[sizeof(ushort)];
-            stream.Read(stringLength);
-            ushort stringLengthShort = BitConverter.ToUInt16(stringLength);
-
-            byte[] readData = new byte[stringLengthShort];
-            stream.Read(readData);
-
-            Assert.AreEqual(sendingString, Encoding.UTF8.GetString(readData));
-
-            connectingClient.Dispose();
+            Assert.AreEqual(sendingString, Encoding.UTF8.GetString(connectingClient.Read()));
         }
     }
 }
