@@ -145,7 +145,10 @@ namespace TcpSubLib
         /// </summary>
         private void ConnectNewClient(object sender, ElapsedEventArgs e)
         {
-            _listener.BeginAcceptTcpClient(ClientAccepted, null);
+            if (_listener.Pending())
+                _listener.BeginAcceptTcpClient(ClientAccepted, null);
+            else
+                _connector.Start();
         }
 
         /// <summary>
