@@ -11,6 +11,14 @@ namespace TcpSubLib
     /// </summary>
     public class TcpReader : IDisposable
     {
+        public int AvailableData
+        {
+            get
+            {
+                return _client.Available;
+            }
+        }
+
         private readonly TcpClient _client;
 
         /// <summary>
