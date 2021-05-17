@@ -11,11 +11,25 @@ namespace TcpSubLib
     /// </summary>
     public class TcpReader : IDisposable
     {
+        /// <summary>
+        /// Gets the amount of data that can be read right now in bytes.
+        /// </summary>
         public int AvailableData
         {
             get
             {
                 return _client.Available;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether this instance is still connected to the specified <see cref="IPAddress"/>.
+        /// </summary>
+        public bool Connected
+        {
+            get
+            {
+                return _client.Connected;
             }
         }
 
@@ -115,6 +129,7 @@ namespace TcpSubLib
             return JsonSerializer.Deserialize<T>(await ReadAsync());
         }
 
+        ///<inheritdoc/>
         public void Dispose()
         {
             _client.Dispose();

@@ -181,6 +181,7 @@ namespace TcpSubLib
             }
         }
 
+        ///<inheritdoc/>
         public void Dispose()
         {
             _connector.Dispose();
